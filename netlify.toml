@@ -1,0 +1,23 @@
+[build]
+  command     = "npm run build"
+  publish     = "dist"
+
+# Redirect all routes to index.html for SPA
+[[redirects]]
+  from   = "/*"
+  to     = "/index.html"
+  status = 200
+
+# Proxy endpoint — Netlify Functions
+[[redirects]]
+  from   = "/api/proxy"
+  to     = "/.netlify/functions/proxy"
+  status = 200
+  force  = true
+
+[[headers]]
+  for = "/api/*"
+  [headers.values]
+    Access-Control-Allow-Origin  = "*"
+    Access-Control-Allow-Methods = "GET, OPTIONS"
+    Access-Control-Allow-Headers = "*"

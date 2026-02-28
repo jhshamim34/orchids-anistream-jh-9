@@ -1,73 +1,158 @@
-# Welcome to your Lovable project
+# Anime Streaming App
 
-## Project info
+React + Vite + TypeScript anime streaming app with a built-in HLS proxy.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+---
 
-## How can I edit this code?
+## Requirements
 
-There are several ways of editing your application.
+- Node.js 18+
+- npm or bun
 
-**Use Lovable**
+---
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+## Local Development
 
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+```bash
+npm install
 npm run dev
+# App runs at http://localhost:3000
 ```
 
-**Edit a file directly in GitHub**
+---
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Production Build
 
-**Use GitHub Codespaces**
+```bash
+npm run build
+# Builds frontend -> dist/
+# Compiles server  -> dist-server/
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+---
 
-## What technologies are used for this project?
+## Self-Hosted / VPS
 
-This project is built with:
+```bash
+npm install
+npm run build
+npm run start
+# Serves on http://0.0.0.0:3000
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+To run on a custom port:
 
-## How can I deploy this project?
+```bash
+PORT=8080 npm run start
+```
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+### With PM2 (recommended for VPS)
 
-## Can I connect a custom domain to my Lovable project?
+```bash
+npm install -g pm2
+npm run build
+pm2 start dist-server/index.js --name anime-app
+pm2 save
+pm2 startup
+```
 
-Yes, you can!
+### With a reverse proxy (Nginx)
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+```nginx
+server {
+    listen 80;
+    server_name yourdomain.com;
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+```
+
+---
+
+## Vercel
+
+1. Push your repo to GitHub/GitLab.
+2. Import the project on [vercel.com](https://vercel.com).
+3. No extra configuration needed — `vercel.json` is already included.
+4. Deploy. The `/api/proxy` serverless function is at `api/proxy.ts`.
+
+> **Note:** Vercel's free tier has a 10-second function timeout. Segment proxying works fine; very slow origins may timeout.
+
+---
+
+## Netlify
+
+1. Push your repo to GitHub/GitLab.
+2. Import the project on [netlify.com](https://netlify.com).
+3. Build command: `npm run build`  
+   Publish directory: `dist`  
+   (These are already set in `netlify.toml`.)
+4. Deploy. The proxy runs as a Netlify Function at `netlify/functions/proxy.js`.
+
+> **Note:** Netlify Functions have a 10-second timeout on the free plan. For streaming-heavy use, a VPS or Render is better.
+
+---
+
+## Render
+
+1. Push your repo to GitHub.
+2. Create a new **Web Service** on [render.com](https://render.com).
+3. Connect your repo — Render will detect `render.yaml` automatically.
+4. Settings (auto-filled from `render.yaml`):
+   - Build Command: `npm run build`
+   - Start Command: `npm run start`
+5. Deploy.
+
+> Free Render instances spin down after inactivity. Use a paid plan or a keep-alive ping for production.
+
+---
+
+## Docker (any cloud / VPS)
+
+Create a `Dockerfile`:
+
+```dockerfile
+FROM node:20-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN npm run build
+EXPOSE 3000
+CMD ["npm", "run", "start"]
+```
+
+Build and run:
+
+```bash
+docker build -t anime-app .
+docker run -p 3000:3000 anime-app
+```
+
+---
+
+## Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `PORT`   | `3000`  | Port the production server listens on |
+
+No other environment variables are required.
+
+---
+
+## Project Scripts
+
+| Script | Description |
+|--------|-------------|
+| `npm run dev` | Start development server with HLS proxy |
+| `npm run build` | Build frontend + compile production server |
+| `npm run start` | Start production server (requires build first) |
+| `npm run lint` | Run ESLint |

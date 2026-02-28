@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: anime-streaming
+    env: node
+    plan: free
+    buildCommand: npm run build
+    startCommand: npm run start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+    routes:
+      - type: rewrite
+        source: /api/proxy
+        destination: /api/proxy
+      - type: rewrite
+        source: /*
+        destination: /index.html
